@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>HealthBot</title>
+
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Orbitron Font -->
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&display=swap" rel="stylesheet">
+
+<!-- Heartbeat Animation -->
+<style>
+@keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    25% { transform: scale(1.15); }
+    40% { transform: scale(1); }
+    60% { transform: scale(1.15); }
+}
+.heart-beat {
+    animation: heartbeat 1.2s infinite;
+}
+
+.sidebar-collapsed {
+    width: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+    transition: all 0.3s ease-in-out;
+}
+.main-expanded {
+    margin-left: 0 !important;
+}
+
+</style>
+
+</head>
+
+<body class="bg-emerald-950 h-screen flex">
+
+    <!-- DISCLAIMER MODAL -->
+<div id="disclaimerModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+    <div class="bg-emerald-900 border-2 border-amber-50 text-amber-50 p-8 rounded-2xl max-w-2xl mx-4 shadow-2xl backdrop-blur-sm">
+        <div class="flex justify-end mb-4">
+            <button id="closeDisclaimer" class="text-amber-50 hover:text-red-400 text-xl p-1">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="text-center">
+            <h2 class="text-2xl font-bold mb-4 tracking-wide" style="font-family: 'Orbitron', sans-serif;">
+                ⚠️ Important Notice
+            </h2>
+            <p class="text-lg leading-relaxed opacity-95">
+                Healthbot can only give you medical <strong>advice</strong> from trusted sources, not diagnose you. 
+                For any serious conditions, <strong>please consult medical professionals.</strong>
+            </p>
+        </div>
+    </div>
+</div>
+
+
+<!-- LOCATION PERMISSION TOAST -->
+<div id="locationToast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden">
+    <div class="bg-emerald-900 border border-emerald-500 text-amber-50 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-sm">
+        <svg class="w-5 h-5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        <span>Allow location access to find medical centres near you</span>
+        <button id="allowLocationBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 rounded-lg text-xs font-semibold transition">Allow</button>
+        <button id="dismissToastBtn" class="text-amber-50/50 hover:text-amber-50 ml-1 text-lg leading-none">&times;</button>
+    </div>
+</div>
+
+<!-- MAP MODAL -->
+<div id="mapModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 hidden">
+    <div class="bg-emerald-950 border-2 border-emerald-700 rounded-2xl shadow-2xl w-full max-w-3xl mx-4 overflow-hidden flex flex-col" style="max-height:85vh;">
+        <div class="bg-emerald-900 px-6 py-4 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-3">
+                <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <h3 class="text-amber-50 font-bold text-lg tracking-wide" style="font-family:'Orbitron',sans-serif;">Medical Centres Near You</h3>
+            </div>
+            <button id="closeMapBtn" class="text-amber-50 hover:text-red-400 transition p-1">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div id="mapContent" class="flex-1 flex items-center justify-center min-h-[400px]">
+            <div id="mapLoading" class="text-amber-50 flex flex-col items-center gap-3 opacity-80">
+                <svg class="w-10 h-10 text-emerald-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                </svg>
+                <span class="text-sm">Fetching your location...</span>
+            </div>
+            <div id="mapError" class="hidden text-center px-8">
+                <svg class="w-12 h-12 text-red-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                </svg>
+                <p id="mapErrorText" class="text-amber-50 text-sm opacity-80"></p>
+                <button id="retryLocationBtn" class="mt-4 bg-emerald-700 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm transition">Try Again</button>
+            </div>
+            <iframe id="mapIframe" class="hidden w-full" style="height:500px; border:0;" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+        <div class="bg-emerald-900/50 px-6 py-3 text-xs text-amber-50/60 text-center shrink-0">
+            Showing hospitals, clinics &amp; medical centres within 5km · Powered by Google Maps
+        </div>
+    </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="w-[260px] bg-emerald-900 text-amber-50 flex flex-col p-4">
+
+    <div class="text-xl font-bold mb-6 tracking-wide flex items-center gap-2"
+         style="font-family: 'Orbitron', sans-serif;">
+
+        <div class="heart-beat text-red-400 text-xl"><svg class="w-[48px] h-[48px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12.01 6.001C6.5 1 1 8 5.782 13.001L12.011 20l6.23-7C23 8 17.5 1 12.01 6.002Z"/>
+</svg>
+</div>
+        HealthBot
+    </div>
+
+    <button id="newChatBtn"
+        class="bg-emerald-700 hover:bg-emerald-800 rounded-lg px-3 py-2 text-sm mb-4">
+        + New Chat
+    </button>
+
+    <button id="clearAllBtn"
+    class="bg-red-700 hover:bg-red-800 rounded-lg px-3 py-2 text-sm mb-4 ml-2 text-xs">
+    Clear All
+    </button>
+
+
+    <div id="chatHistory" class="flex-1 space-y-2 overflow-y-auto"></div>
+
+    <!-- Trusted Sources Label -->
+<div class="text-xs text-amber-50 mb-3 pb-2 tracking-wide">Trusted sources:</div>
+
+<!-- Trusted Sources Buttons -->
+<div class="mt-auto flex gap-3 justify-end pt-4 pb-4">
+    <!-- Mayo Clinic -->
+    <a href="https://www.mayoclinic.org/" target="_blank" 
+       class="group relative p-2 hover:bg-amber-500/20 rounded-xl transition-all duration-300"
+       title="Visit Mayo Clinic - Trusted Medical Advice">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Mayo_Clinic_logo.svg/120px-Mayo_Clinic_logo.svg.png" 
+             alt="Mayo Clinic" 
+             class="w-9 h-9 opacity-80 group-hover:opacity-100 transition-opacity">
+    </a>
+    
+    <a href="https://my.clevelandclinic.org/" target="_blank" 
+       class="group relative p-2 hover:bg-amber-500/20 rounded-xl transition-all duration-300"
+       title="Visit Cleveland Clinic - Trusted Medical Advice">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCOZ7Uc04me61x94aYVVdytJTY5-_CIJb2iA&s" 
+             alt="Cleveland Clinic" 
+             class="w-9 h-9 opacity-80 group-hover:opacity-100 transition-opacity">
+    </a>
+
+    <a href="https://www.ninds.nih.gov/" target="_blank" 
+       class="group relative p-2 hover:bg-amber-500/20 rounded-xl transition-all duration-300"
+       title="NINDS - NIH Neurological Research">
+        <img src="https://images.seeklogo.com/logo-png/32/2/nih-logo-png_seeklogo-322003.png" 
+             alt="NINDS NIH" 
+             class="w-8 h-8 opacity-80 group-hover:opacity-100 transition-opacity">
+    </a>
+</div>
+
+
+</div>
+
+<!-- MAIN -->
+<div class="flex-1 flex flex-col">
+
+    <!-- HEADER -->
+    <div class="bg-emerald-800 text-amber-50 px-8 py-4 shadow-md flex items-center gap-3 relative">
+
+        <button id="sidebarToggle" class="ml-4 p-2 hover:bg-emerald-700 rounded-lg transition">
+    <svg id="toggleIcon" class="w-6 h-6 text-amber-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+    </svg>
+</button>
+
+        <div class="heart-beat">
+            <span class="text-red-400 text-2xl"><svg class="w-[48px] h-[48px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12.01 6.001C6.5 1 1 8 5.782 13.001L12.011 20l6.23-7C23 8 17.5 1 12.01 6.002Z"/>
+</svg>
+</span>
+        </div>
+
+        <div>
+            <h2 class="text-3xl font-bold tracking-wider"
+                style="font-family: 'Orbitron', sans-serif;">
+                HealthBot
+            </h2>
+            <p class="text-sm opacity-80">Describe your symptoms</p>
+        </div>
+
+        <!-- MAP BUTTON top right -->
+        <button id="openMapBtn" title="Find medical centres near you"
+            class="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-2 bg-emerald-700 hover:bg-emerald-600 active:scale-95 text-amber-50 px-4 py-2 rounded-xl transition-all duration-200 shadow-lg text-sm font-semibold">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            Nearby Centres
+        </button>
+
+    </div>
+
+    <!-- CHAT -->
+    <div id="chatBox" class="flex-1 overflow-y-auto px-6 py-6 space-y-6"></div>
+
+    <!-- INPUT -->
+    <div class="bg-amber-50 border-t p-4">
+        <!-- Image preview strip (hidden until image selected) -->
+        <div id="imagePreviewStrip" style="display:none" class="max-w-4xl mx-auto mb-3 flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2">
+            <img id="imageThumb" src="" alt="preview" class="w-12 h-12 object-cover rounded-lg border border-emerald-300"/>
+            <span id="imageFileName" class="text-sm text-emerald-800 flex-1 truncate"></span>
+            <button onclick="clearImageSelection()" class="text-red-400 hover:text-red-600 transition p-1" title="Remove image">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="max-w-4xl mx-auto flex gap-3 items-center">
+            <!-- Hidden file input -->
+            <input type="file" id="imageUpload" accept="image/*" class="hidden" onchange="handleImageSelected(event)"/>
+            <!-- Upload button -->
+            <button onclick="document.getElementById('imageUpload').click()"
+                title="Upload an image for visual analysis"
+                class="bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 text-emerald-700 p-3 rounded-xl transition shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+            </button>
+            <input 
+                id="userInput"
+                type="text"
+                placeholder="Type your symptoms or upload an image..."
+                class="flex-1 border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                onkeydown="if(event.key==='Enter'){sendMessage()}"
+            />
+            <button 
+                onclick="sendMessage()"
+                class="bg-emerald-700 text-white px-6 py-3 rounded-xl hover:bg-emerald-800 transition"
+            >
+                Send
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+let chats = JSON.parse(localStorage.getItem('healthbot_chats')) || [];
+let currentChatIndex = parseInt(localStorage.getItem('healthbot_current')) || -1;
+
+// Load chats on page load
+window.addEventListener('load', () => {
+    renderChatHistory();
+    if (currentChatIndex >= 0 && chats[currentChatIndex]) {
+        loadChat(currentChatIndex);
+    }
+});
+
+// SAVE MESSAGE (updated)
+function saveChats() {
+    localStorage.setItem('healthbot_chats', JSON.stringify(chats));
+    if (currentChatIndex >= 0) {
+        localStorage.setItem('healthbot_current', currentChatIndex.toString());
+    }
+}
+
+async function sendMessage() {
+    const input = document.getElementById("userInput");
+    const message = input.value.trim();
+    if (!message) return;
+
+    const chatBox = document.getElementById("chatBox");
+
+    // NEW CHAT INIT - Add timestamp on FIRST message
+    if (currentChatIndex === -1) {
+        chats.push([]);
+        currentChatIndex = chats.length - 1;
+        
+        // ADD TIMESTAMP DIV
+        const now = new Date();
+        const timeStr = now.toLocaleString('en-US', { 
+            weekday: 'short', 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric',
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: true 
+        });
+        
+        // ADD TIMESTAMP DIV (text only)
+chatBox.innerHTML += `
+    <div class="w-full flex justify-center mb-6 mt-4">
+        <span class="text-amber-50 text-sm font-medium tracking-wide opacity-80"
+              style="font-family:sans-serif;">
+            ${timeStr}
+        </span>
+    </div>
+`;
+
+        // SAVE TIMESTAMP to chat array so it persists on reload
+        chats[currentChatIndex].push({ sender: "timestamp", text: timeStr });
+
+        renderChatHistory();
+    }
+
+    // USER MESSAGE UI
+    chatBox.innerHTML += `
+        <div class="flex justify-end">
+            <div class="bg-emerald-700 text-white px-4 py-3 rounded-2xl max-w-xl">
+                ${message}
+            </div>
+        </div>
+    `;
+
+    chats[currentChatIndex].push({ sender: "user", text: message, timestamp: new Date().toISOString() });
+    saveChats();
+
+    input.value = "";
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // FETCH RESPONSE (unchanged rest...)
+    try {
+        const response = await fetch("/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: message })
+        });
+
+        const data = await response.json();
+        const textColor = data.severity === "high" ? "text-red-700 font-semibold" : "text-gray-800";
+
+        chatBox.innerHTML += `
+            <div class="flex justify-start">
+                <div class="bg-amber-50 shadow px-4 py-3 rounded-2xl max-w-xl ${textColor}">
+                    ${data.response}
+                </div>
+            </div>
+        `;
+
+        chats[currentChatIndex].push({ sender: "bot", text: data.response });
+        saveChats();
+    } catch(e) {
+        chatBox.innerHTML += `
+            <div class="flex justify-start">
+                <div class="bg-amber-50 shadow px-4 py-3 rounded-2xl max-w-xl text-gray-500">
+                    Sorry, connection issue. Try again.
+                </div>
+            </div>
+        `;
+    }
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// RENDER SIDEBAR
+function renderChatHistory() {
+    const historyDiv = document.getElementById("chatHistory");
+    historyDiv.innerHTML = "";
+
+    chats.forEach((chat, index) => {
+        const preview = chat[0]?.text?.slice(0, 25) + '...' || "New Chat";
+
+        const item = document.createElement("div");
+        item.className = "p-2 rounded hover:bg-emerald-800 cursor-pointer text-sm flex justify-between items-center";
+        
+        // Main preview + load functionality
+        const previewSpan = document.createElement("span");
+        previewSpan.className = "truncate flex-1";
+        previewSpan.innerText = preview;
+        previewSpan.onclick = () => loadChat(index);
+        
+        // Delete button
+        const deleteBtn = document.createElement("button");
+        deleteBtn.innerHTML = `
+    <svg class="w-6 h-6 text-amber-50" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/>
+</svg>
+
+`;
+        deleteBtn.className = "ml-2 hover:text-red-400 text-xs p-1 hover:bg-red-900/50 rounded w-6 h-6 flex items-center justify-center";
+        deleteBtn.title = "Delete chat";
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation();  // Prevent triggering loadChat
+            if (confirm(`Delete "${preview}"? This action can't be undone and deleted chat can't be restored`)) {
+                chats.splice(index, 1);
+                if (currentChatIndex === index) {
+                    currentChatIndex = -1;
+                    document.getElementById("chatBox").innerHTML = "";
+                } else if (currentChatIndex > index) {
+                    currentChatIndex--;
+                }
+                saveChats();
+                renderChatHistory();
+            }
+        };
+        
+        item.appendChild(previewSpan);
+        item.appendChild(deleteBtn);
+        historyDiv.appendChild(item);
+    });
+}
+
+
+// LOAD CHAT (updated)
+function loadChat(index) {
+    currentChatIndex = index;
+    saveChats();  // ← Save current index
+
+    const chatBox = document.getElementById("chatBox");
+    chatBox.innerHTML = "";
+
+    chats[index].forEach(msg => {
+        if (msg.sender === "timestamp") {
+            chatBox.innerHTML += `
+            <div class="w-full flex justify-center mb-6 mt-4">
+                <span class="text-amber-50 text-sm font-medium tracking-wide opacity-80"
+                      style="font-family:sans-serif;">
+                    ${msg.text}
+                </span>
+            </div>`;
+        } else if (msg.sender === "user") {
+            chatBox.innerHTML += `
+            <div class="flex justify-end">
+                <div class="bg-emerald-700 text-white px-4 py-3 rounded-2xl max-w-xl">
+                    ${msg.text}
+                </div>
+            </div>`;
+        } else {
+            chatBox.innerHTML += `
+            <div class="flex justify-start">
+                <div class="bg-amber-50 shadow px-4 py-3 rounded-2xl max-w-xl text-gray-800">
+                    ${msg.text}
+                </div>
+            </div>`;
+        }
+    });
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// NEW CHAT BUTTON (updated)
+document.getElementById("newChatBtn").onclick = () => {
+    currentChatIndex = -1;
+    document.getElementById("chatBox").innerHTML = "";
+    fetch("/reset", { method: "POST" });
+};
+
+// CLEAR ALL BUTTON
+document.getElementById("clearAllBtn").onclick = () => {
+    if (confirm("Delete ALL chats? Deleted chats can't be restored.")) {
+        chats = [];
+        currentChatIndex = -1;
+        document.getElementById("chatBox").innerHTML = "";
+        saveChats();
+        renderChatHistory();
+    }
+};
+
+// DISCLAIMER MODAL
+window.addEventListener('load', () => {
+    const modal = document.getElementById('disclaimerModal');
+    const closeBtn = document.getElementById('closeDisclaimer');
+    
+    setTimeout(() => modal.style.display = 'none', 8000);
+    
+    closeBtn.onclick = () => modal.style.display = 'none';
+    modal.onclick = (e) => {
+        if (e.target === modal) modal.style.display = 'none';
+    };
+    
+    localStorage.setItem('disclaimerSeen', 'true');
+});
+
+if (localStorage.getItem('disclaimerSeen') !== 'true') {
+    document.getElementById('disclaimerModal').style.display = 'flex';
+}
+
+document.getElementById('sidebarToggle').onclick = () => {
+    const sidebar = document.querySelector('.w-\\[260px\\]');
+    const main = document.querySelector('.flex-1.flex.flex-col');
+    const icon = document.getElementById('toggleIcon');
+    
+    sidebar.classList.toggle('sidebar-collapsed');
+    main.classList.toggle('main-expanded');
+    
+    if (sidebar.classList.contains('sidebar-collapsed')) {
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>';
+    } else {
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>';
+    }
+};
+
+// ── LOCATION & MAP ──────────────────────────────────────────────
+let userLocation = null;
+
+function showMapState(state, errorMsg) {
+    document.getElementById('mapLoading').classList.toggle('hidden', state !== 'loading');
+    document.getElementById('mapError').classList.toggle('hidden', state !== 'error');
+    document.getElementById('mapIframe').classList.toggle('hidden', state !== 'map');
+    if (state === 'error' && errorMsg) {
+        document.getElementById('mapErrorText').textContent = errorMsg;
+    }
+}
+
+function loadMapWithLocation(lat, lng) {
+    const query = encodeURIComponent('hospitals clinics medical centre');
+    const src = `https://maps.google.com/maps?q=${query}&ll=${lat},${lng}&z=14&output=embed&near=${lat},${lng}`;
+    const iframe = document.getElementById('mapIframe');
+    iframe.src = src;
+    showMapState('map');
+}
+
+function requestLocation(onSuccess) {
+    if (!navigator.geolocation) {
+        onSuccess && onSuccess(null, 'Geolocation is not supported by your browser.');
+        return;
+    }
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            localStorage.setItem('healthbot_location_granted', 'true');
+            hideLocationToast();
+            onSuccess && onSuccess(userLocation, null);
+        },
+        (err) => {
+            const msg = err.code === 1
+                ? 'Location access was denied. Please enable it in your browser settings and try again.'
+                : 'Could not retrieve your location. Please try again.';
+            onSuccess && onSuccess(null, msg);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+    );
+}
+
+// Toast
+function showLocationToast() {
+    document.getElementById('locationToast').classList.remove('hidden');
+}
+function hideLocationToast() {
+    document.getElementById('locationToast').classList.add('hidden');
+}
+
+document.getElementById('allowLocationBtn').onclick = () => {
+    requestLocation((loc, err) => {
+        if (!err) hideLocationToast();
+    });
+};
+document.getElementById('dismissToastBtn').onclick = () => {
+    hideLocationToast();
+    localStorage.setItem('healthbot_location_dismissed', 'true');
+};
+
+// Map modal open
+document.getElementById('openMapBtn').onclick = () => {
+    const modal = document.getElementById('mapModal');
+    modal.classList.remove('hidden');
+    showMapState('loading');
+
+    if (userLocation) {
+        loadMapWithLocation(userLocation.lat, userLocation.lng);
+    } else {
+        requestLocation((loc, err) => {
+            if (loc) {
+                loadMapWithLocation(loc.lat, loc.lng);
+            } else {
+                showMapState('error', err);
+            }
+        });
+    }
+};
+
+// Map modal close
+document.getElementById('closeMapBtn').onclick = () => {
+    document.getElementById('mapModal').classList.add('hidden');
+    document.getElementById('mapIframe').src = '';
+};
+document.getElementById('mapModal').onclick = (e) => {
+    if (e.target === document.getElementById('mapModal')) {
+        document.getElementById('mapModal').classList.add('hidden');
+        document.getElementById('mapIframe').src = '';
+    }
+};
+
+// Retry button
+document.getElementById('retryLocationBtn').onclick = () => {
+    showMapState('loading');
+    requestLocation((loc, err) => {
+        if (loc) loadMapWithLocation(loc.lat, loc.lng);
+        else showMapState('error', err);
+    });
+};
+
+// On page load: ask for location politely via toast (once)
+window.addEventListener('load', () => {
+    const alreadyGranted = localStorage.getItem('healthbot_location_granted');
+    const dismissed = localStorage.getItem('healthbot_location_dismissed');
+
+    if (alreadyGranted) {
+        // Silently re-fetch in background
+        requestLocation(() => {});
+    } else if (!dismissed) {
+        setTimeout(() => showLocationToast(), 2000);
+    }
+});
+
+// ── IMAGE UPLOAD & VISION ────────────────────────────────────────
+let selectedImageBase64 = null;
+let selectedMediaType = null;
+
+function handleImageSelected(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    selectedMediaType = file.type || "image/jpeg";
+    document.getElementById("imageFileName").textContent = file.name;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const dataUrl = e.target.result;
+        // Strip the data-url prefix to get raw base64
+        selectedImageBase64 = dataUrl.split(",")[1];
+        document.getElementById("imageThumb").src = dataUrl;
+        document.getElementById("imagePreviewStrip").style.display = "flex";
+    };
+    reader.readAsDataURL(file);
+    // Reset file input so same file can be re-selected
+    event.target.value = "";
+}
+
+function clearImageSelection() {
+    selectedImageBase64 = null;
+    selectedMediaType = null;
+    document.getElementById("imagePreviewStrip").style.display = "none";
+    document.getElementById("imageThumb").src = "";
+    document.getElementById("imageFileName").textContent = "";
+}
+
+// Override sendMessage to handle image mode
+const _originalSendMessage = sendMessage;
+sendMessage = async function() {
+    if (selectedImageBase64) {
+        await sendImageMessage();
+    } else {
+        await _originalSendMessage();
+    }
+};
+
+async function sendImageMessage() {
+    const chatBox = document.getElementById("chatBox");
+    const textInput = document.getElementById("userInput");
+    const caption = textInput.value.trim() || "What is this?";
+    const imageDataUrl = document.getElementById("imageThumb").src;
+
+    // Init chat if needed
+    if (currentChatIndex === -1) {
+        chats.push([]);
+        currentChatIndex = chats.length - 1;
+        const now = new Date();
+        const timeStr = now.toLocaleString("en-US", {
+            weekday: "short", year: "numeric", month: "short", day: "numeric",
+            hour: "2-digit", minute: "2-digit", hour12: true
+        });
+        chatBox.innerHTML += `
+            <div class="w-full flex justify-center mb-6 mt-4">
+                <span class="text-amber-50 text-sm font-medium tracking-wide opacity-80">${timeStr}</span>
+            </div>`;
+        chats[currentChatIndex].push({ sender: "timestamp", text: timeStr });
+        renderChatHistory();
+    }
+
+    // Show user bubble: image thumbnail + caption
+    chatBox.innerHTML += `
+        <div class="flex justify-end">
+            <div class="bg-emerald-700 text-white px-4 py-3 rounded-2xl max-w-xl">
+                <img src="${imageDataUrl}" alt="uploaded" class="rounded-xl mb-2 max-h-48 object-cover w-full"/>
+                <p class="text-sm opacity-90">${caption}</p>
+            </div>
+        </div>`;
+
+    chats[currentChatIndex].push({ sender: "user", text: `[Image] ${caption}` });
+    saveChats();
+    textInput.value = "";
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // Capture and clear selection before async work
+    const b64 = selectedImageBase64;
+    const mime = selectedMediaType;
+    clearImageSelection();
+
+    // Typing indicator
+    const typingId = "typing-" + Date.now();
+    chatBox.innerHTML += `
+        <div id="${typingId}" class="flex justify-start">
+            <div class="bg-amber-50 shadow px-4 py-3 rounded-2xl max-w-xl text-gray-500 text-sm flex items-center gap-2">
+                <svg class="w-4 h-4 animate-spin text-emerald-600" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                </svg>
+                Analysing image...
+            </div>
+        </div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    try {
+        const res = await fetch("/analyze-image", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ image: b64, mediaType: mime })
+        });
+        const data = await res.json();
+        const typingEl = document.getElementById(typingId);
+
+        if (data.error) {
+            if (typingEl) typingEl.outerHTML = `
+                <div class="flex justify-start">
+                    <div class="bg-amber-50 shadow px-4 py-3 rounded-2xl max-w-xl text-red-500 text-sm">
+                        Sorry, couldn't analyse the image. ${data.error}
+                    </div>
+                </div>`;
+        } else {
+            const textColor = data.severity === "high" ? "text-red-700 font-semibold" : "text-gray-800";
+            // Format newlines as paragraphs
+            const formatted = data.response
+                .split("\n\n").map(p => `<p class="mb-2">${p.replace(/\n/g, "<br/>")}</p>`).join("");
+            if (typingEl) typingEl.outerHTML = `
+                <div class="flex justify-start">
+                    <div class="bg-amber-50 shadow px-4 py-3 rounded-2xl max-w-xl ${textColor}">
+                        <div class="flex items-center gap-1 text-emerald-700 text-xs font-bold uppercase tracking-widest mb-2">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            Image Analysis
+                        </div>
+                        ${formatted}
+                    </div>
+                </div>`;
+            chats[currentChatIndex].push({ sender: "bot", text: data.response });
+            saveChats();
+
+            if (data.severity === "high") {
+                await appendNearbyDepartment("hospital emergency", chatBox);
+            }
+        }
+    } catch(e) {
+        const typingEl = document.getElementById(typingId);
+        if (typingEl) typingEl.outerHTML = `
+            <div class="flex justify-start">
+                <div class="bg-amber-50 shadow px-4 py-3 rounded-2xl max-w-xl text-gray-500 text-sm">
+                    Sorry, connection issue. Try again.
+                </div>
+            </div>`;
+    }
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,139 @@
+{
+  "hello": {
+    "symptoms": ["hi", "hello", "what's up","hey","whats up"],
+    "advice": "Hey! Nice to meet ya! What can I help you with?",
+    "severity": "low"
+  },
+  "headache": {
+    "symptoms": ["headache", "head's", "migraine","head"],
+    "advice": "Rest in a quiet dark room and stay hydrated. If severe, consult a doctor.",
+    "severity": "low"
+  },
+  "toothache": {
+    "symptoms": ["tooth", "teeth", "molars","premolars","breath"],
+    "advice": "This suggests a dental condition.Brush your teeth properly(not too rough, since it can damage enamel),twice a day for at least 3 minutes at a time.Use clove oil on affected tooth.",
+    "severity": "low"
+  },
+  "reflux": {
+    "symptoms": ["bad taste", "bitter", "bitterness","acidic"],
+    "advice": "This might be due to Acid reflux, which can be caused when you have a heavy meal. Wash your mouth with water, and do light exercises",
+    "severity": "low"
+  },
+  "penis": {
+    "symptoms": ["dick", "penis", "weiner","cock","foreskin"],
+    "advice": "Problems relating to the penis can be due to genital Injuries or in serious cases, STDs (Chlamydia) or UTI.",
+    "severity": "high"
+  },
+  "neck": {
+    "symptoms": ["neck"],
+    "advice": "This can be due to Neck sprains,or bad posture.Try sitting up straight and have your neck against a headrest on your chair",
+    "severity": "low"
+  },
+  "throat": {
+    "symptoms": ["swallow","throat"],
+    "advice": "This might be due to cold,or small internal injury.Drink some lukewarm water with ginger and honey, and do saline water gargles",
+    "severity": "low"
+  },
+  "stomach": {
+    "symptoms": ["stomach","stomachache","belly","bellyache","tummyache","tummy"],
+    "advice": "This might be due to various reasons. Avoid eating very spicy food, drink a lot of fluids and eat probiotic cooling food like yogurt and cucumbers. Avoid too much heat.",
+    "severity": "low"
+  },
+  "bloat": {
+    "symptoms": ["bloat","bloating","bloated","gas","burp"],
+    "advice": "Bloating can be due to many different reasons. Avoid spicy food, and eat food rich in dietary fibers. Do exercises like yoga, and if possible, avoid lactose rich food like dairy products",
+    "severity": "low"
+  },
+
+  "cold": {
+    "symptoms": ["chilly", "shiver","shiverring","shivers", "cold"],
+    "advice": "Try to get some rest and cover your body with some blankets",
+    "severity": "medium"
+  },
+  "eye related": {
+    "symptoms": ["eyes", "eye","blur","blurry", "blurred"],
+    "advice": "Limit your screen time and don't have your eyes too close to the screen so as to not strain them. Rest in a dark room for a few hours",
+    "severity": "medium"
+  },
+  "common cold": {
+    "symptoms": ["cough", "coughing","coughs","nose", "throat"],
+    "advice": "Drink some warm fluids, like honey/ginger with warm water",
+    "severity": "medium"
+  },
+  "ear condition": {
+    "symptoms": ["hear", "hearing","listen","ear", "ears"],
+    "advice": "This could be a sign some underlying ear condition.Ears hurting can be due to ear infections, or even blocked eardrums.Put a few drops of Soli-wax (or just warm water) and lie down with the affected ears facing up",
+    "severity": "medium"
+  },
+  "back pain": {
+    "symptoms": ["back", "backbone","spine","bend"],
+    "advice": "This may be back pain due to bad posture.Try orthopoedic mattresses, and when sitting down,keep your back perpendicular to the seat",
+    "severity": "medium"
+  },
+  "tetanus": {
+    "symptoms": ["rusted", "rusty","metal","cut","iron"],
+    "advice": "For this situation, Apply some antiseptic on the wound after cleaning with water, then head to nearest clinic for a Tetanus vaccine (within 24 hours of getting cut).",
+    "severity": "medium"
+  },
+  "skin": {
+    "symptoms": ["burns", "redness","red","reddish","burning","hot to touch","hot to the touch"],
+    "advice": "Things like this might indicate first degree burns. Take a cold shower and apply Aloe Vera gel on affected areas, or icepacks.",
+    "severity": "low"
+  },
+  "skin2": {
+    "symptoms": ["burnt", "blister","blisters","blistering"],
+    "advice": "Things like this might indicate a Second or Third degree burn.Put cool water on the area and cover with clean bandages.Don't pop your blisters, and take over the counter medication only if necessary",
+    "severity": "medium"
+  },
+  "fever": {
+    "symptoms": ["temperature", "chills", "sweating"],
+    "advice": "I suggest you to drink fluids and monitor temperature.",
+    "severity": "medium"
+  },
+  "chest pain": {
+    "symptoms": ["chest", "heart","heartache"],
+    "advice": "You should seek immediate medical attention. Chest related problems can be due to heart complications",
+    "severity": "high",
+    "department": "hospital emergency"
+  },
+  "dog bite": {
+    "symptoms": ["dog", "bat","raccoon","dogbite","opossum"],
+    "advice": "Animal bites like this could cause rabies, please head to the nearest hospital for a Rabies vaccine within 24 hours of getting bit.",
+    "severity": "high",
+    "department": "hospital emergency"
+  },
+  "breath": {
+    "symptoms": ["breath", "breathe","shortness","short"],
+    "advice": "This could suggest respiratory problems like Asthma, or in some rare cases, Pneumonia.Seek immediate medical care.",
+    "severity": "high",
+    "department": "hospital emergency"
+  },
+  "snake bite": {
+    "symptoms": ["snake", "viper","mamba","cobra","snakebite"],
+    "advice": "Snake bites like this could be venomous and deadly, tie a piece of cloth tightly around the bit area and head to hospital/call poison control. DO NOT TRY TO SUCK OUT THE VENOM.",
+    "severity": "high",
+    "department": "poison control"
+  },
+  "epilepsy": {
+    "symptoms": ["stare", "convulsion","convulsions","convulsing","seizure","seizures"],
+    "advice": "You should seek immediate medical attention. This might be a sign of Epilepsy. Lay the the patient by their sides instead of facing up. ",
+    "severity": "high",
+    "department": "hospital emergency"
+  },
+  "stroke": {
+    "symptoms": ["droop", "drooped","droopy","drooping","slurred","slurring"],
+    "advice": "This could be the sign of a stroke,call the hospital as quickly as you can.",
+    "severity": "high",
+    "department": "hospital emergency"
+  },
+  "thanks": {
+    "symptoms": ["thank", "thanks","thnx","appreciate"],
+    "advice": "You're welcome! Glad I could help. Anything more you want me to help with?",
+    "severity": "low"
+  },
+  "things": {
+    "symptoms": ["suicide", "suicidal","kill myself","end it all","end everything","off myself"],
+    "advice": "You're not alone to think this way. I am but a robot, not a real person. So I think it would be best for you to contact professionals.",
+    "severity": "low"
+  }
+}
